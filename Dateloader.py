@@ -7,11 +7,13 @@ path = os.path.dirname(__file__)
 date_local1 = pd.read_excel(path + '/ElectricDate/台区标识1000967005.xlsx')
 date_local2 = pd.read_excel(path + '/ElectricDate/台区标识1000970901.xlsx')
 
+
 print("date_local.shape: ", date_local1.shape, date_local2.shape)
 
 def Dateloader(DateFrame, axis_in_date, input_size):
     date = DateFrame.values[:,axis_in_date]
     date = date.reshape(-1, 365)
+    num_user = date.shape[0]
     train_date = np.array([[]]*input_size).T
     test_date = np.array([[]]*input_size).T
     # print(date[:, 1:1+10].shape)
@@ -29,31 +31,29 @@ def Dateloader(DateFrame, axis_in_date, input_size):
     
     print("train_date.shape: ", train_date.shape, "test_date.shape: ", test_date.shape)
 
-    return train_date, test_date
+    return train_date, test_date, num_user
 
 
-traindate_1_1, testdate_1_1 = Dateloader(date_local1, 1, 10)
-# traindate_1_2, testdate_1_2 = Dateloader(date_local1, 2, 10)
-# traindate_1_3, testdate_1_3 = Dateloader(date_local1, 3, 10)
-# traindate_1_4, testdate_1_4 = Dateloader(date_local1, 4, 10)
+traindate_1_1, testdate_1_1, num_user1 = Dateloader(date_local1, 1, 10)
+traindate_1_2, testdate_1_2, _ = Dateloader(date_local1, 2, 10)
+traindate_1_3, testdate_1_3, _ = Dateloader(date_local1, 3, 10)
+traindate_1_4, testdate_1_4, _ = Dateloader(date_local1, 4, 10)
 
-# traindate_2_1, testdate_2_1 = Dateloader(date_local2, 1, 10)
-# traindate_2_2, testdate_2_2 = Dateloader(date_local2, 2, 10)
-# traindate_2_3, testdate_2_3 = Dateloader(date_local2, 3, 10)
-# traindate_2_4, testdate_2_4 = Dateloader(date_local2, 4, 10)
+traindate_2_1, testdate_2_1, num_user2 = Dateloader(date_local2, 1, 10)
+traindate_2_2, testdate_2_2, _= Dateloader(date_local2, 2, 10)
+traindate_2_3, testdate_2_3, _ = Dateloader(date_local2, 3, 10)
+traindate_2_4, testdate_2_4, _ = Dateloader(date_local2, 4, 10)
 
 # print(testdate_1_1[0])
 # print(testdate_1_1[-1])
 
-
 # 从时间窗口划分后的数据还原
-def redate_local(date, input_size):
-    num_user = int(date.shape[0] / (int(365*0.8)-input_size+1))
+def redate_local(date, input_size, num_user):
     origin_date = np.array([[]]*num_user)
     # print("origin_date.shape: ", origin_date.shape)
 
-    # print(num_user)
-    for i in range(0, int(365*0.8)-input_size+1):
+    for i in range(0, int(date.shape[0]/num_user)):
+        # print(date[i*num_user:(i+1)*num_user,:].shape)
         origin_date = np.hstack([origin_date, date[i*num_user:(i+1)*num_user,:]])
     # print("origin_date.shape: ",origin_date.shape)
 
@@ -61,8 +61,9 @@ def redate_local(date, input_size):
     # print(date_.shape)
     for i in range(2*input_size-1, origin_date.shape[1], input_size):
         date_ = np.hstack([date_, origin_date[:, i:i+1]])
-    # print(date_.shape)
+    
+    print("恢复数据shape", date_.shape)
     # print(date_[0])
 
-    date_ = date_.reshape(-1, 1)
+    # date_ = date_.reshape(-1, 1)
     return date_
